@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Jeopardy</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <main id="app">
+
+    </main>
+    <script>
+        app=document.getElementById("app");
+        function loadXMLDoc() {
+            return new Promise(function(resolve,reject) {
+                var xhttp = new XMLHttpRequest()
+                xhttp.open("GET", "http://jservice.io/api/categories?count=5&offset=10");
+
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        categories=JSON.parse(this.responseText);
+                        categories.forEach(
+                            function(cat){
+                            var col = document.createElement('div');
+                            col.classList.add("column");
+                            col.id="category-"+cat.id;
+
+                            var head = document.createElement('header');
+                            head.classList.add("header");
+                            head.innerHTML=cat.title
+
+                            var boxes=document.createElement('div');
+                            boxes.classList.add("box-list");
+                            boxes.id="category-"+cat.id+"-boxes";
+
+                            col.appendChild(head)
+                            col.appendChild(boxes)
+                            app.appendChild(col);
+
+                            loadClues(cat.id).then(function(f){
+
+                            f.clues=f.clues.slice(0,5)
+                            f.clues.forEach(function(g)
+                            {
+                                var box = document.createElement("div");
+                                box.classList.add("box")
+                                box.classList.add("price")
+                                box.innerHTML=g.value;
+                                box.onclick=function()
+                                    {
+                                    this.classList.add("question");
+                                    this.innerHTML=g.question;
+                                    this.onclick=
+                                    function()
+                                        {
+                                        this.classList.add("answer");
+                                        this.innerHTML=g.answer
+                                        }
+                                    }
+                                document.getElementById("category-"+cat.id+"-boxes").appendChild(box);
+                            }
+                            )
+                            });
+                            }
+                        )
+                        resolve(categories);
+                    }
+                };
+                xhttp.oneror = function()
+                {
+                    reject(["error"]);
+                }
+                xhttp.send();
+            })
+        }
+    function loadClues(cat_id) {
+	return new Promise(function(resolve,reject)
+	{
+		var xhttp = new XMLHttpRequest();
+		  xhttp.open("GET", "http://jservice.io/api/category?id="+cat_id);
+		  xhttp.onreadystatechange = function() {
+		    if (this.readyState == 4 && this.status == 200) {
+		     	resolve(JSON.parse(this.responseText));
+		    }
+		  };
+		  xhttp.oneror = function()
+		  {
+		  	reject(["error"]);
+		  }
+		  xhttp.send();
+	})
+}
+loadXMLDoc().then(function(f){})
+    </script>
+</body>
+</html>
